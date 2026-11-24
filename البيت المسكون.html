@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<title>البيت المسكون</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,maximum-scale=1">
+<style>
+:root{color-scheme:dark;--ac:#b01818;--fg:#e8e0d8;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:none}
+html,body{margin:0;height:100%;background:#000;color:var(--fg);font-family:system-ui,sans-serif;overflow:hidden}
+canvas{display:block;position:fixed;inset:0}
+.scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.9);z-index:20;padding:20px;text-align:center}
+.hide{display:none!important}
+h1{color:var(--ac);font-size:34px;margin:0;text-shadow:0 0 14px #600}
+p{margin:0;max-width:420px;line-height:1.7;font-size:15px;opacity:.85}
+button{font:inherit;color:var(--fg);background:#1c0a0a;border:1px solid var(--ac);border-radius:10px;padding:12px 26px;font-size:18px}
+button:active{background:var(--ac)}
+label{display:flex;flex-direction:column;gap:4px;width:260px;font-size:15px}
+select,input{width:100%;font:inherit;padding:6px}
+#hud{position:fixed;inset:0;z-index:5;pointer-events:none}
+#hud>*{pointer-events:auto}
+#msg{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;transform:translateX(-50%);width:80%;text-align:center;font-size:17px;text-shadow:0 0 6px #000;pointer-events:none}
+#prompt{position:fixed;top:58%;left:50%;transform:translateX(-50%);color:#ffd9a0;font-size:18px;text-shadow:0 0 6px #000;pointer-events:none}
+#inv{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;font-size:13px;opacity:.85;text-align:right;pointer-events:none}
+#vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle,transparent 35%,rgba(120,0,0,.85) 100%);opacity:0}
+#slit{position:fixed;inset:0;pointer-events:none;background:linear-gradient(#000 0 42%,transparent 42% 58%,#000 58%)}
+#lk{position:fixed;right:0;top:0;width:62%;height:100%}
+#jz{position:fixed;left:0;bottom:0;width:38%;height:60%}
+#base{position:absolute;left:28px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);width:110px;height:110px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
+#knob{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.3)}
+.bt{position:fixed;z-index:6;border-radius:50%;width:72px;height:72px;padding:0;font-size:15px;background:rgba(30,10,10,.7)}
+#bI{right:22px;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);width:88px;height:88px}
+#bRun{right:125px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
+#bC{right:22px;bottom:calc(env(safe-area-inset-bottom,0px) + 135px)}
+#bT{right:110px;bottom:calc(env(safe-area-inset-bottom,0px) + 105px)}
+.on{background:var(--ac)!important}
+#digs{display:flex;gap:10px;direction:ltr}
+#digs button{width:64px;height:84px;font-size:36px}
+</style></head><body>
+<div id="menu" class="scr"><h1>البيت المسكون</h1>
+<p>أنت محبوس في بيت مهجور. الوحش أعمى تماماً ولا يعتمد إلا على السمع. تحرّك بهدوء، اختبئ، وابحث عن مفتاح الباب الرئيسي.</p>
+<button id="play">ابدأ اللعب</button><button id="opts">الإعدادات</button>
+<p style="font-size:13px;opacity:.6">يفضل تدوير الهاتف أفقياً · سماعات الرأس تعطي أفضل تجربة صوتية</p></div>
+<div id="set" class="scr hide"><h1>الإعدادات</h1>
+<label>مستوى الصوت<input id="sVol" type="range" min="0" max="1" step=".05" value=".8"></label>
+<label>حساسية الحركة<input id="sSens" type="range" min=".4" max="2.5" step=".1" value="1"></label>
+<label>الصعوبة<select id="sDiff"><option value="easy">سهل</option><option value="normal" selected>عادي</option><option value="hard">صعب</option></select></label>
+<button id="back">رجوع</button></div>
+<div id="end" class="scr hide"><h1 id="eT"></h1><p id="eP"></p><button id="again">العب مرة أخرى</button></div>
+<div id="safe" class="scr hide"><h1 style="font-size:26px">الخزنة</h1><div id="digs"><button>0</button><button>0</button><button>0</button></div><button id="sOpen">فتح</button><button id="sClose">إغلاق</button></div>
+<div id="hud" class="hide"><div id="vig"></div><div id="slit" class="hide"></div><div id="lk"></div>
+<div id="jz"><div id="base"><div id="knob"></div></div></div>
+<div id="msg"></div><div id="prompt"></div><div id="inv"></div>
+<button id="bI" class="bt">تفاعل</button><button id="bRun" class="bt">ركض</button><button id="bC" class="bt">تسلل</button><button id="bT" class="bt hide">رمي</button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const S=4,WH=3.2;
+const MAP=["################","#.....#........#","#.....#........#","#..............#","#.....#........#","###.#######.####","#..............X","####.###D#######","#....#.........#","#....#.........#","#....#.........#","################"];
+const R=MAP.length,C=16;
+const cfg={vol:.8,sens:1,diff:'normal'};
+const DIFF={easy:{spd:.8,hear:.75,srch:5,grace:22},normal:{spd:1,hear:1,srch:8,grace:15},hard:{spd:1.25,hear:1.35,srch:12,grace:8}};
+const inp={mx:0,my:0,run:false,crouch:false},K={};
+let renderer,scene,cam,world,grid,blocks,inter,doors,m,G=null,lights=[],AC,master,mpan,nbuf;
+try{
+renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+document.body.prepend(renderer.domElement);
+scene=new THREE.Scene();scene.background=new THREE.Color(0x0a0a0c);scene.fog=new THREE.FogExp2(0x0a0a0c,.04);
+cam=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,50);cam.rotation.order='YXZ';scene.add(cam);
+const pl=new THREE.PointLight(0xffe0b0,1.2,18);cam.add(pl);scene.add(new THREE.AmbientLight(0x707088,1.0));
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()});
+}catch(e){document.body.innerHTML='<div class="scr"><p>جهازك لا يدعم WebGL.</p></div>'}
+
+function tex(c1,c2,rx,ry){const cv=document.createElement('canvas');cv.width=cv.height=128;const x=cv.getContext('2d');x.fillStyle=c1;x.fillRect(0,0,128,128);x.fillStyle=c2;for(let i=0;i<700;i++){x.globalAlpha=Math.random()*.3;x.fillRect(Math.random()*128,Math.random()*128,Math.random()*7+1,Math.random()*7+1)}const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);return t}
+const cell=(x,z)=>[Math.floor(x/S),Math.floor(z/S)];
+const mat=c=>new THREE.MeshLambertMaterial({color:c});
+
+function solid(x,z){const r=Math.floor(z/S),c=Math.floor(x/S);const ch=grid[r]&&grid[r][c];return ch===undefined||ch==='#'||ch==='D'||ch==='X'}
+function hit(x,z,r){return solid(x-r,z-r)||solid(x+r,z-r)||solid(x-r,z+r)||solid(x+r,z+r)||blocks.some(b=>Math.abs(x-b.x)<b.w+r&&Math.abs(z-b.z)<b.d+r)}
+function moveP(p,dx,dz){if(!hit(p.x+dx,p.z,.45))p.x+=dx;if(!hit(p.x,p.z+dz,.45))p.z+=dz}
+function bfs(a,b){const k=(c,r)=>r*C+c,prev=new Map([[k(a[0],a[1]),null]]),q=[a];
+while(q.length){const[c,r]=q.shift();if(c===b[0]&&r===b[1])break;for(const[x,y]of[[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+x,nr=r+y;if(nc<0||nr<0||nc>=C||nr>=R||grid[nr][nc]!=='.'||prev.has(k(nc,nr)))continue;prev.set(k(nc,nr),[c,r]);q.push([nc,nr])}}
+if(!prev.has(k(b[0],b[1])))return[];const out=[];let cur=b;while(cur){out.unshift(cur);cur=prev.get(k(cur[0],cur[1]))}
+return out.slice(1).map(([c,r])=>({x:c*S+S/2,z:r*S+S/2}))}
+const okc=t=>t[0]>0&&t[1]>0&&t[0]<C&&t[1]<R&&grid[t[1]][t[0]]==='.';
+
+function box(x,z,w,h,d,col,sol=true){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(col));o.position.set(x,h/2,z);world.add(o);if(sol)blocks.push({x,z,w:w/2+.05,d:d/2+.05});return o}
+
+function mkMonster(){const g=new THREE.Group(),white=mat(0xdcd8d0),skin=mat(0x9ca598);
+const dress=new THREE.Mesh(new THREE.CylinderGeometry(.3,.85,2.1,10),white);dress.position.y=1.05;g.add(dress);
+const head=new THREE.Mesh(new THREE.SphereGeometry(.26,10,8),mat(0xe8e8e2));head.scale.y=1.3;head.position.y=2.4;g.add(head);
+const eM=new THREE.MeshBasicMaterial({color:0xff1010});[-.1,.1].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.045,6,6),eM);e.position.set(x,2.45,.22);g.add(e)});
+const mouth=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),new THREE.MeshBasicMaterial({color:0x000000}));mouth.scale.y=1.8;mouth.position.set(0,2.27,.22);g.add(mouth);
+const hm=new THREE.MeshBasicMaterial({color:0x050505});
+[[0,2.0,-.2,.6,1.3,.12],[-.27,2.05,0,.1,1.1,.4],[.27,2.05,0,.1,1.1,.4]].forEach(([x,y,z,w,h,d])=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),hm);o.position.set(x,y,z);g.add(o)});
+g.arms=[-1,1].map(s=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(.05,.04,1.5,5),skin);a.position.set(s*.42,1.65,.1);a.rotation.z=s*.12;g.add(a);return a});
+g.scale.setScalar(1.12);return g}
+
+function build(){
+if(world)scene.remove(world);world=new THREE.Group();scene.add(world);lights=[];
+grid=MAP.map(s=>s.split(''));blocks=[];inter=[];doors={};
+const wm=new THREE.MeshLambertMaterial({map:tex('#7a6c5a','#2a2118',1,1)}),gm=new THREE.BoxGeometry(S,WH,S);
+const dm={D:mat(0x4a2a14),X:mat(0x3a1010)};
+for(let r=0;r<R;r++)for(let c=0;c<C;c++){const ch=grid[r][c];if(ch==='.')continue;
+const o=new THREE.Mesh(gm,ch==='#'?wm:dm[ch]);o.position.set(c*S+S/2,WH/2,r*S+S/2);world.add(o);if(ch!=='#')doors[ch]=o}
+const fl=new THREE.Mesh(new THREE.PlaneGeometry(C*S,R*S),new THREE.MeshLambertMaterial({map:tex('#55442f','#1a120a',C,R)}));fl.rotation.x=-Math.PI/2;fl.position.set(C*S/2,0,R*S/2);world.add(fl);
+const ce=new THREE.Mesh(new THREE.PlaneGeometry(C*S,R*S),mat(0x3a352f));ce.rotation.x=Math.PI/2;ce.position.set(C*S/2,WH,R*S/2);world.add(ce);
+[[14,3.0,8],[42,3.0,8],[32,3.0,26],[12,3.0,38],[42,3.0,38]].forEach(([x,y,z],i)=>{const l=new THREE.PointLight(0xffb060,1.4,20);l.position.set(x,y,z);l.base=1.4;l.fl=0;world.add(l);lights.push(l)});
+// furniture & interactables
+const hide=(x,z,label)=>inter.push({x,z,r:2.8,label,type:'hide'});
+box(19,8,2.2,.6,3.6,0x3b2a22);hide(19,8,'اختبئ تحت السرير');
+box(5,6,1.2,2.4,2,0x2e1c10);hide(5,6,'اختبئ في الخزانة');
+box(5,18,1.2,1,2,0x3a2414);
+inter.push({x:5,z:18,r:2.8,label:'افتح الدرج',on(i){if(G.keys.brass)return say('الدرج فارغ');G.keys.brass=true;snd.pick();say('وجدت مفتاحاً نحاسياً صدئاً');inv();i.label='الدرج فارغ'}});
+box(59,6,1.2,2.4,2,0x2e1c10);hide(59,6,'اختبئ في الخزانة');
+box(42,10,3.2,.9,1.2,0x2a1a1a);
+box(10,38,2,.9,1.4,0x3a2a1a);
+inter.push({x:10,z:38,r:2.6,label:'اقرأ الورقة',on(){G.noted=true;say('ورقة ممزقة، خط مرتجف: «'+G.code.split('').join(' - ')+'»');inv()}});
+const bt=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,.35,8),new THREE.MeshLambertMaterial({color:0x3a7a4a,emissive:0x0a2010}));bt.position.set(14,.45,42);world.add(bt);
+inter.push({x:14,z:42,r:2.4,label:'التقط الزجاجة',on(i){G.bottles++;i.dead=true;world.remove(bt);snd.pick();say('زجاجة فارغة... يمكنني رميها لتشتيت الوحش');inv()}});
+box(5,42,1.2,2.2,1.8,0x2e1c10);hide(5,42,'اختبئ في الخزانة');
+box(58.6,38,.9,1.2,.9,0x222a30);
+inter.push({x:58.6,z:38,r:2.8,label:'الخزنة',on(){if(G.keys.main)return say('الخزنة فارغة');$('safe').classList.remove('hide');G.paused=true}});
+box(34,42,3,.9,1.2,0x2a1a10);
+inter.push({x:34,z:30,r:4.3,label:'باب المكتب',on(i){if(!G.keys.brass){snd.lock();return say('الباب مقفل. أحتاج مفتاحاً.')}grid[7][8]='.';world.remove(doors.D);i.dead=true;snd.door();emit(34,30,18);say('فتحت باب المكتب... أحدث ذلك صوتاً!')}});
+inter.push({x:62,z:26,r:4.3,label:'الباب الرئيسي',on(){if(!G.keys.main){snd.lock();return say('الباب الرئيسي مقفل بإحكام.')}snd.door();finish(true)}});
+m={x:54,z:26,ry:0,state:'patrol',path:[],sT:0,rT:0,stT:0,brT:2,obj:mkMonster()};world.add(m.obj);
+}
+
+const msgEl=$('msg');let msgT;
+function say(t,ms=4500){msgEl.textContent=t;clearTimeout(msgT);msgT=setTimeout(()=>msgEl.textContent='',ms)}
+function inv(){const a=[];if(G.keys.brass)a.push('🗝 مفتاح نحاسي');if(G.keys.main)a.push('🔑 مفتاح الباب الرئيسي');if(G.noted)a.push('📜 الرمز: '+G.code);if(G.bottles)a.push('🍾 زجاجة ×'+G.bottles);$('inv').innerHTML=a.join('<br>');$('bT').classList.toggle('hide',!G.bottles)}
+
+/* ---------- Audio ---------- */
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=cfg.vol;master.connect(AC.destination);
+mpan=AC.createPanner();mpan.panningModel='HRTF';mpan.distanceModel='inverse';mpan.refDistance=2;mpan.rolloffFactor=1.3;mpan.connect(master);
+nbuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+[55,58].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;const g=AC.createGain();g.gain.value=.022;const fl=AC.createBiquadFilter();fl.frequency.value=170;o.connect(fl).connect(g).connect(master);o.start()})}catch(e){AC=null}}
+function nz(dur,fq,vol,dest,type){if(!AC)return;const s=AC.createBufferSource();s.buffer=nbuf;s.loop=true;const f=AC.createBiquadFilter();f.type=type||'lowpass';f.frequency.value=fq;const g=AC.createGain(),t=AC.currentTime;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f).connect(g).connect(dest||master);s.start();s.stop(t+dur)}
+function tn(fq,dur,vol,type,dest){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(fq,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,fq/2),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(dest||master);o.start();o.stop(t+dur)}
+const snd={step:()=>nz(.1,320,.12),mstep:()=>{tn(70,.35,.9,'sine',mpan);nz(.25,220,.6,mpan)},breath:()=>nz(1.3,700,.5,mpan,'bandpass'),
+heart:()=>{tn(55,.16,.7);setTimeout(()=>tn(50,.16,.5),180)},pick:()=>{tn(900,.2,.15,'triangle')},door:()=>{nz(.5,500,.5);tn(90,.4,.5)},lock:()=>{nz(.12,1800,.3,null,'highpass')},
+glass:()=>{nz(.5,5000,.5,null,'highpass');tn(1800,.3,.15,'triangle')},scream:()=>{nz(1.2,1500,1,null,'bandpass');tn(700,1,.5,'sawtooth')}};
+
+/* ---------- Monster hearing ---------- */
+function emit(x,z,r){if(!G||G.over)return;const D=DIFF[cfg.diff];if(Math.hypot(m.x-x,m.z-z)<=r*D.hear){m.state='investigate';m.path=bfs(cell(m.x,m.z),cell(x,z))}}
+
+function monUpdate(dt,p){const D=DIFF[cfg.diff];m.obj.position.set(m.x,0,m.z);if(G.t<D.grace)return;let sp=0;
+if(m.state==='patrol'&&!m.path.length){let t;do{t=[1+(Math.random()*14|0),1+(Math.random()*10|0)]}while(!okc(t));m.path=bfs(cell(m.x,m.z),t)}
+if(m.state==='investigate'&&!m.path.length){m.state='search';m.sT=D.srch;m.rT=0}
+if(m.state==='search'){m.sT-=dt;m.rT-=dt;if(m.rT<=0){m.rT=1.6+Math.random();const[c,r]=cell(m.x,m.z),t=[c+(Math.random()*5|0)-2,r+(Math.random()*5|0)-2];if(okc(t))m.path=bfs([c,r],t)}if(m.sT<=0)m.state='patrol'}
+if(m.path.length){const t=m.path[0],dx=t.x-m.x,dz=t.z-m.z,d=Math.hypot(dx,dz);if(d<.15)m.path.shift();else{sp=(m.state==='investigate'?2.9:m.state==='search'?1.7:1.5)*D.spd;const s=Math.min(d,sp*dt);m.x+=dx/d*s;m.z+=dz/d*s;m.ry=Math.atan2(dx,dz)}}
+m.obj.rotation.y=m.ry;m.obj.arms.forEach((a,i)=>a.rotation.x=Math.sin(G.t*3+i*3)*.25);
+if(sp>0){m.stT-=dt;if(m.stT<=0){snd.mstep();m.stT=.9-sp*.1}}
+m.brT-=dt;if(m.brT<=0){snd.breath();m.brT=3+Math.random()*2}
+if(!G.hidden&&Math.hypot(m.x-p.x,m.z-p.z)<1.3)finish(false)}
+
+/* ---------- Game ---------- */
+function start(){initAudio();if(AC&&AC.state==='suspended')AC.resume();build();
+G={p:{x:14,z:10},yaw:-Math.PI/2,pitch:0,t:0,stepT:0,bob:0,hbT:0,keys:{},bottles:0,code:String(100+(Math.random()*900|0)),noted:false,hidden:null,paused:false,over:false,near:null,lt:0};
+inp.crouch=false;$('bC').classList.remove('on');
+['menu','set','end','safe'].forEach(i=>$(i).classList.add('hide'));$('hud').classList.remove('hide');$('slit').classList.add('hide');
+inv();say('اسمع جيداً... الوحش لا يرى، لكنه يسمع كل شيء.',6000)}
+
+function finish(win){if(G.over)return;G.over=true;$('hud').classList.add('hide');
+if(!win)snd.scream();
+$('eT').textContent=win?'نجوت!':'أمسك بك الوحش';
+$('eP').textContent=win?'النهاية: الهروب. فتحت الباب الرئيسي وخرجت قبل أن يسمعك أحد.':'النهاية: الفخ. أمسكت بك أصابعها الباردة في الظلام. تذكّر: الركض يُسمع من بعيد، والصمت ينجّيك.';
+$('end').classList.remove('hide')}
+
+function update(dt){G.t+=dt;const p=G.p;
+if(!G.hidden){const run=inp.run&&!inp.crouch,sp=inp.crouch?1.6:run?5.4:3.2;
+let f=inp.my+(K.w?1:0)-(K.s?1:0),s=inp.mx+(K.d?1:0)-(K.a?1:0),l=Math.hypot(f,s);if(l>1){f/=l;s/=l;l=1}
+if(l>.1){const sy=Math.sin(G.yaw),cy=Math.cos(G.yaw);moveP(p,(-sy*f+cy*s)*sp*dt,(-cy*f-sy*s)*sp*dt);G.stepT+=sp*l*dt;G.bob+=dt*sp*2.2;
+if(G.stepT>2.4){G.stepT=0;snd.step();emit(p.x,p.z,inp.crouch?3:run?20:9)}}
+cam.position.set(p.x,(inp.crouch?1.0:1.6)+Math.sin(G.bob)*.04,p.z)}
+else cam.position.set(G.hidden.x,1.15,G.hidden.z);
+cam.rotation.set(G.pitch,G.yaw,0);
+// interaction
+let best=null,bd=99;const fx=-Math.sin(G.yaw),fz=-Math.cos(G.yaw);
+if(!G.hidden)for(const i of inter){if(i.dead)continue;const dx=i.x-p.x,dz=i.z-p.z,d=Math.hypot(dx,dz);if(d<i.r&&d<bd&&(dx*fx+dz*fz)/d>.2){best=i;bd=d}}
+G.near=best;$('prompt').textContent=G.hidden?'اضغط «تفاعل» للخروج':best?best.label:'';
+monUpdate(dt,p);
+// danger
+const d=Math.hypot(m.x-p.x,m.z-p.z),dang=Math.max(0,1-d/22);$('vig').style.opacity=dang*.9;
+G.hbT-=dt;if(dang>.2&&G.hbT<=0){snd.heart();G.hbT=1.3-dang*.8}
+// lights flicker
+G.lt-=dt;if(G.lt<=0){G.lt=.08;lights.forEach(l=>{if(l.fl>0)l.fl--;else if(Math.random()<.03)l.fl=3+(Math.random()*5|0);l.intensity=l.fl>0?(Math.random()<.5?.05:.6):l.base})}
+// audio listener
+if(AC){const L=AC.listener,v=new THREE.Vector3();cam.getWorldDirection(v);
+if(L.positionX){L.positionX.value=cam.position.x;L.positionY.value=cam.position.y;L.positionZ.value=cam.position.z;L.forwardX.value=v.x;L.forwardY.value=v.y;L.forwardZ.value=v.z;L.upX.value=0;L.upY.value=1;L.upZ.value=0;mpan.positionX.value=m.x;mpan.positionY.value=1.8;mpan.positionZ.value=m.z}
+else{L.setPosition(cam.position.x,cam.position.y,cam.position.z);L.setOrientation(v.x,v.y,v.z,0,1,0);mpan.setPosition(m.x,1.8,m.z)}}}
+
+function interact(){if(!G||G.over||G.paused)return;
+if(G.hidden){G.hidden=null;$('slit').classList.add('hide');emit(G.p.x,G.p.z,3);return}
+const i=G.near;if(!i)return;
+if(i.type==='hide'){G.hidden=i;$('slit').classList.remove('hide');say('تختبئ... لا تتحرك ولا تصدر صوتاً.',3000);return}
+i.on&&i.on(i)}
+function throwB(){if(!G||G.over||G.hidden||G.paused||G.bottles<=0)return;G.bottles--;inv();const p=G.p,fx=-Math.sin(G.yaw),fz=-Math.cos(G.yaw);let d=0;
+while(d<14&&!solid(p.x+fx*(d+.5),p.z+fz*(d+.5)))d+=.5;const tx=p.x+fx*d,tz=p.z+fz*d;
+setTimeout(()=>{snd.glass();emit(tx,tz,22)},300+d*30)}
+
+/* ---------- Input ---------- */
+function drag(el,onStart,onMove,onEnd){let id=null;el.addEventListener('pointerdown',e=>{if(id!==null)return;id=e.pointerId;el.setPointerCapture(id);onStart(e)});
+el.addEventListener('pointermove',e=>{if(e.pointerId===id)onMove(e)});const en=e=>{if(e.pointerId===id){id=null;onEnd&&onEnd(e)}};el.addEventListener('pointerup',en);el.addEventListener('pointercancel',en)}
+let jc={x:0,y:0},lp={x:0,y:0};const knob=$('knob');
+function jm(e){let dx=e.clientX-jc.x,dy=e.clientY-jc.y;const l=Math.hypot(dx,dy),RR=50;if(l>RR){dx*=RR/l;dy*=RR/l}knob.style.transform=`translate(${dx}px,${dy}px)`;inp.mx=dx/RR;inp.my=-dy/RR}
+drag($('jz'),e=>{const r=$('base').getBoundingClientRect();jc={x:r.left+r.width/2,y:r.top+r.height/2};jm(e)},jm,()=>{inp.mx=inp.my=0;knob.style.transform=''});
+drag($('lk'),e=>{lp={x:e.clientX,y:e.clientY}},e=>{if(!G)return;G.yaw-=(e.clientX-lp.x)*.005*cfg.sens;G.pitch=Math.max(-1.2,Math.min(1.2,G.pitch-(e.clientY-lp.y)*.005*cfg.sens));lp={x:e.clientX,y:e.clientY}});
+const hold=(el,fn)=>{el.addEventListener('pointerdown',()=>{fn(true);el.classList.add('on')});['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,()=>{fn(false);el.classList.remove('on')}))};
+hold($('bRun'),v=>inp.run=v);
+$('bC').addEventListener('click',()=>{inp.crouch=!inp.crouch;$('bC').classList.toggle('on',inp.crouch)});
+$('bI').addEventListener('click',interact);$('bT').addEventListener('click',throwB);
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='shift')inp.run=true;else if(k==='c'){inp.crouch=!inp.crouch;$('bC').classList.toggle('on',inp.crouch)}else if(k==='e')interact();else if(k==='q')throwB();else K[k]=true});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='shift')inp.run=false;else K[k]=false});
+// menus
+$('play').onclick=start;$('again').onclick=start;
+$('opts').onclick=()=>{$('menu').classList.add('hide');$('set').classList.remove('hide')};
+$('back').onclick=()=>{$('set').classList.add('hide');$('menu').classList.remove('hide')};
+$('sVol').oninput=e=>{cfg.vol=+e.target.value;if(master)master.gain.value=cfg.vol};
+$('sSens').oninput=e=>cfg.sens=+e.target.value;$('sDiff').onchange=e=>cfg.diff=e.target.value;
+// safe
+const digs=[...document.querySelectorAll('#digs button')];digs.forEach(b=>b.onclick=()=>{b.textContent=(+b.textContent+1)%10;snd.lock()});
+$('sClose').onclick=()=>{$('safe').classList.add('hide');G.paused=false};
+$('sOpen').onclick=()=>{const v=digs.map(b=>b.textContent).join('');$('safe').classList.add('hide');G.paused=false;
+if(v===G.code){G.keys.main=true;snd.door();emit(58,38,10);inv();say('انفتحت الخزنة! وجدت مفتاح الباب الرئيسي. اذهب إلى نهاية الممر.',6000)}else{snd.lock();emit(58,38,8);say('رمز خاطئ... سمعت صوتاً قريباً؟')}};
+
+let last=0;function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000);last=t;if(G&&!G.over&&!G.paused&&!$('hud').classList.contains('hide'))update(dt);if(renderer)renderer.render(scene,cam)}
+if(renderer)requestAnimationFrame(loop);
+</script></body></html>
